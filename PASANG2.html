@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Simulasi Pemasangan Komponen</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f5f5f5;
+      text-align: center;
+    }
+
+    #mainboard-area {
+      position: relative;
+      display: inline-block;
+    }
+
+    #mainboard-area img {
+      width: 800px;
+      max-width: 100%;
+      height: auto;
+    }
+
+    .drop-zone {
+      position: absolute;
+      border: 2px dashed #4CAF50;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+
+    .drop-zone:hover::after {
+      content: attr(data-label);
+      position: absolute;
+      top: -28px;
+      left: 0;
+      background: rgba(0, 0, 0, 0.7);
+      color: #fff;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      animation: fadeZoom 0.3s ease;
+      white-space: nowrap;
+    }
+
+    @keyframes fadeZoom {
+      from {
+        opacity: 0;
+        transform: scale(0.7);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .hardware {
+      width: 100px;
+      margin: 10px;
+      cursor: grab;
+    }
+
+    #components {
+      margin-top: 20px;
+    }
+
+    .feedback {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>Simulasi Pemasangan Komponen Komputer</h1>
+
+  <div id="mainboard-area">
+    <img src="motherboard.jpg" alt="Motherboard">
+
+    <div class="drop-zone" id="ram-slot" data-type="ram" data-label="Slot RAM"
+         style="top: 90px; left: 420px; width: 60px; height: 120px;"></div>
+
+    <div class="drop-zone" id="cpu-slot" data-type="cpu" data-label="CPU + Fan"
+         style="top: 100px; left: 290px; width: 80px; height: 80px;"></div>
+
+    <div class="drop-zone" id="psu-slot" data-type="psu" data-label="Power Supply"
+         style="top: 30px; left: 600px; width: 80px; height: 60px;"></div>
+
+    <div class="drop-zone" id="hardisk-slot" data-type="hardisk" data-label="Hardisk"
+         style="top: 250px; left: 600px; width: 70px; height: 50px;"></div>
+  </div>
+
+  <div id="components">
+    <img src="RAM.jfif" class="hardware" draggable="true" data-type="ram">
+    <img src="ssd.jfif" class="hardware" draggable="true" data-type="hardisk">
+    <img src="psu-BTX.jpg" class="hardware" draggable="true" data-type="psu">
+    <img src="FAN.jfif" class="hardware" draggable="true" data-type="cpu">
+  </div>
+
+  <div class="feedback" id="feedback"></div>
+
+  <script>
+    const hardwareItems = document.querySelectorAll('.hardware');
+    const dropZones = document.querySelectorAll('.drop-zone');
+    const feedback = document.getElementById('feedback');
+
+    hardwareItems.forEach(item => {
+      item.addEventListener('dragstart', e => {
+        const type = item.getAttribute("data-type");
+        e.dataTransfer.setData("type", type);
+
+        // Clone image for drag preview
+        const dragIcon = item.cloneNode(true);
+        dragIcon.style.width = "80px";
+        dragIcon.style.position = "absolute";
+        dragIcon.style.top = "-1000px";
+        document.body.appendChild(dragIcon);
+
+        e.dataTransfer.setDragImage(dragIcon, 40, 40);
+
+        // Hapus gambar setelah drag selesai
+        item.addEventListener('dragend', () => {
+          document.body.removeChild(dragIcon);
+        });
+      });
+    });
+
+    dropZones.forEach(zone => {
+      zone.addEventListener('dragover', e => e.preventDefault());
+
+      zone.addEventListener('drop', e => {
+        e.preventDefault();
+        const draggedType = e.dataTransfer.getData("type");
+        const targetType = zone.getAttribute("data-type");
+
+        if (draggedType === targetType) {
+          zone.style.background = '#4CAF50';
+          feedback.textContent = "✅ Komponen dipasang dengan benar!";
+          feedback.style.color = "green";
+        } else {
+          zone.style.background = '#f44336';
+          feedback.textContent = "❌ Komponen tidak cocok di slot ini.";
+          feedback.style.color = "red";
+        }
+
+        setTimeout(() => {
+          zone.style.background = '';
+        }, 1500);
+      });
+    });
+  </script>
+</body>
+</html>

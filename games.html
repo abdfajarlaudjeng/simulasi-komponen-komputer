@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Trivia Hardware</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-color: #1e1e1e;
+      color: #fff;
+      padding: 20px;
+      margin: 0;
+    }
+    header {
+      margin-bottom: 20px;
+    }
+    header img {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 10px;
+    }
+    header h2, header h3 {
+      margin: 5px 0;
+    }
+    h1 {
+      color: #00ffcc;
+      margin-bottom: 10px;
+    }
+    #question-box {
+      background: #2e2e2e;
+      padding: 20px;
+      margin: 20px auto;
+      width: 90%;
+      max-width: 600px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #000;
+    }
+    .option {
+      background: #444;
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .option:hover {
+      background: #00ffcc;
+      color: #000;
+    }
+    #score, #timer {
+      font-size: 18px;
+      margin: 10px;
+    }
+    #game-over {
+      color: #ff4c4c;
+      font-size: 22px;
+      margin-top: 20px;
+    }
+    #question-img {
+      max-width: 100%;
+      margin-bottom: 10px;
+      border-radius: 8px;
+    }
+    button {
+      background: #00ffcc;
+      color: #000;
+      padding: 10px 20px;
+      font-size: 16px;
+      margin-top: 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <img src="tutwuri.png" alt="Logo Sekolah">
+    <h2>SMP NEGERI 10 BANAWA SELATAN</h2>
+    <h3>Jalan PNPM Dusun III Desa Malino, Kec.Banawa Selatan, Kab. Donggala Provinsi Sulawesi Tengah</h3>
+  </header>
+
+  <h1>Kuis Pengenalan Hardware</h1>
+  <div id="score">Skor: 0</div>
+  <div id="timer">Waktu: 180 detik</div>
+
+  <div id="question-box">
+    <img id="question-img" src="" alt="Gambar Komponen" style="display:none;">
+    <div id="question">Memuat pertanyaan...</div>
+    <div id="options"></div>
+  </div>
+
+  <div id="game-over"></div>
+  <button id="restart-btn" style="display:none;" onclick="restartGame()">🔄 Ulangi</button>
+
+  <!-- Suara -->
+  <audio id="clap-sound" preload="auto">
+    <source src="applause-8.mp3" type="audio/mpeg">
+    Browser Anda tidak mendukung audio.
+  </audio>
+
+  <!-- Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+
+  <script>
+    const questions = [
+      {
+        question: "Apa fungsi CPU?",
+        image: "cpu.webp",
+        options: ["A.Menyimpan data", "B.Mengolah data", "C.Menampilkan gambar", "D.Memberi daya"],
+        answer: "B.Mengolah data"
+      },
+      {
+        question: "Komponen mana yang menyimpan data secara permanen?",
+        image: "ssd.jfif",
+        options: ["A.RAM", "B.SSD", "C.GPU", "D.Cache"],
+        answer: "B.SSD"
+      },
+      {
+        question: "Apa singkatan dari GPU?",
+        image: "GPU.png",
+        options: ["A.General Processing Unit", "B.Graphical Processing Unit", "C.Gigabyte Power Unit", "D.Global Processor Utility"],
+        answer: "B.Graphical Processing Unit"
+      },
+      {
+        question: "Komponen untuk menampilkan output visual adalah?",
+        image: "monitor.jfif",
+        options: ["A.Speaker", "B.Keyboard", "C.Monitor", "D.Processor"],
+        answer: "C.Monitor"
+      },
+      {
+        question: "RAM adalah singkatan dari?",
+        image: "RAM.jfif",
+        options: ["A.Read Access Memory", "B.Random Access Memory", "C.Rapid Advanced Machine", "D.Remote Access Module"],
+        answer: "B.Random Access Memory"
+      }
+    ];
+
+    let current = 0;
+    let score = 0;
+    let timeLeft = 180;
+    let timer;
+    let correct = 0;
+
+    const questionEl = document.getElementById("question");
+    const optionsEl = document.getElementById("options");
+    const scoreEl = document.getElementById("score");
+    const timerEl = document.getElementById("timer");
+    const gameOverEl = document.getElementById("game-over");
+    const restartBtn = document.getElementById("restart-btn");
+    const questionImg = document.getElementById("question-img");
+    const clapSound = document.getElementById("clap-sound");
+
+    function startGame() {
+      current = 0;
+      score = 0;
+      timeLeft = 180;
+      correct = 0;
+      scoreEl.textContent = "Skor: 0";
+      gameOverEl.textContent = "";
+      restartBtn.style.display = "none";
+      questionImg.style.display = "block";
+      showQuestion();
+
+      timer = setInterval(() => {
+        timeLeft--;
+        timerEl.textContent = `Waktu: ${timeLeft} detik`;
+        if (timeLeft <= 0) endGame();
+      }, 1000);
+    }
+
+    function showQuestion() {
+      if (current >= questions.length) {
+        endGame();
+        return;
+      }
+
+      const q = questions[current];
+      questionEl.textContent = q.question;
+      questionImg.src = q.image;
+      questionImg.style.display = "block";
+      optionsEl.innerHTML = "";
+
+      q.options.forEach(opt => {
+        const btn = document.createElement("div");
+        btn.className = "option";
+        btn.textContent = opt;
+        btn.onclick = () => checkAnswer(opt, q.answer);
+        optionsEl.appendChild(btn);
+      });
+    }
+
+    function checkAnswer(selected, correctAnswer) {
+      if (selected === correctAnswer) {
+        score += 100;
+        correct++;
+        scoreEl.textContent = `Skor: ${score}`;
+        try {
+          clapSound.currentTime = 0;
+          clapSound.play();
+        } catch (e) {
+          console.log("Audio tidak dapat diputar:", e);
+        }
+        fireConfetti();
+      }
+      current++;
+      showQuestion();
+    }
+
+    function endGame() {
+      clearInterval(timer);
+      questionEl.textContent = "";
+      optionsEl.innerHTML = "";
+      questionImg.style.display = "none";
+      gameOverEl.textContent = `⏰ Waktu habis atau soal selesai! Skor akhir: ${score} (${correct} benar)`;
+      restartBtn.style.display = "inline-block";
+    }
+
+    function restartGame() {
+      startGame();
+    }
+
+    function fireConfetti() {
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
+    }
+
+    window.onload = startGame;
+  </script>
+
+</body>
+</html>

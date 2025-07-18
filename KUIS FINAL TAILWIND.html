@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>KUIS PENGENALAN HARDWARE</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Bootstrap CSS CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+    }
+    .option:hover {
+      background-color: #00ffcc !important;
+      color: #000 !important;
+    }
+  </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen flex flex-col items-center justify-start py-8">
+
+  <header class="text-center mb-6">
+    <img src="tutwuri.png" alt="Logo Sekolah" class="w-20 h-20 mx-auto mb-3">
+    <h2 class="text-2xl font-bold uppercase">SMP NEGERI 10 BANAWA SELATAN</h2>
+    <h3 class="text-base">Jalan PNPM Dusun III Desa Malino, Kec. Banawa Selatan, Kab. Donggala, Sulawesi Tengah</h3>
+  </header>
+
+  <main class="w-full max-w-xl bg-gray-800 rounded-xl shadow-lg p-6 text-center">
+    <h1 class="text-3xl font-bold text-teal-400 mb-4">Kuis Pengenalan Hardware</h1>
+    <div id="score" class="text-lg mb-2">Skor: 0</div>
+    <div id="timer" class="text-lg mb-4">Waktu: 180 detik</div>
+
+    <div id="question-box" class="bg-gray-700 p-4 rounded-lg shadow-inner">
+      <img id="question-img" src="" alt="Gambar Komponen" class="w-full mb-3 rounded-lg hidden">
+      <div id="question" class="text-xl font-semibold mb-3">Memuat pertanyaan...</div>
+      <div id="options" class="space-y-2"></div>
+    </div>
+
+    <div id="game-over" class="text-red-400 font-semibold mt-4"></div>
+    <button id="restart-btn" onclick="restartGame()" class="btn btn-success mt-4 hidden">🔄 Ulangi</button>
+  </main>
+
+  <!-- Suara -->
+  <audio id="clap-sound" preload="auto">
+    <source src="applause-8.mp3" type="audio/mpeg">
+    Browser Anda tidak mendukung audio.
+  </audio>
+
+  <!-- Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+
+  <script>
+    const questions = [
+      {
+        question: "Apa fungsi CPU?",
+        image: "cpu.webp",
+        options: ["A.Menyimpan data", "B.Mengolah data", "C.Menampilkan gambar", "D.Memberi daya"],
+        answer: "B.Mengolah data"
+      },
+      {
+        question: "Komponen mana yang menyimpan data secara permanen?",
+        image: "ssd.jfif",
+        options: ["A.RAM", "B.SSD", "C.GPU", "D.Cache"],
+        answer: "B.SSD"
+      },
+      {
+        question: "Apa singkatan dari GPU?",
+        image: "GPU.png",
+        options: ["A.General Processing Unit", "B.Graphical Processing Unit", "C.Gigabyte Power Unit", "D.Global Processor Utility"],
+        answer: "B.Graphical Processing Unit"
+      },
+      {
+        question: "Komponen untuk menampilkan output visual adalah?",
+        image: "monitor.jfif",
+        options: ["A.Speaker", "B.Keyboard", "C.Monitor", "D.Processor"],
+        answer: "C.Monitor"
+      },
+      {
+        question: "RAM adalah singkatan dari?",
+        image: "RAM.jfif",
+        options: ["A.Read Access Memory", "B.Random Access Memory", "C.Rapid Advanced Machine", "D.Remote Access Module"],
+        answer: "B.Random Access Memory"
+      }
+    ];
+
+    let current = 0;
+    let score = 0;
+    let timeLeft = 180;
+    let timer;
+    let correct = 0;
+
+    const questionEl = document.getElementById("question");
+    const optionsEl = document.getElementById("options");
+    const scoreEl = document.getElementById("score");
+    const timerEl = document.getElementById("timer");
+    const gameOverEl = document.getElementById("game-over");
+    const restartBtn = document.getElementById("restart-btn");
+    const questionImg = document.getElementById("question-img");
+    const clapSound = document.getElementById("clap-sound");
+
+    function startGame() {
+      current = 0;
+      score = 0;
+      timeLeft = 180;
+      correct = 0;
+      scoreEl.textContent = "Skor: 0";
+      gameOverEl.textContent = "";
+      restartBtn.classList.add("hidden");
+      questionImg.classList.remove("hidden");
+      showQuestion();
+
+      timer = setInterval(() => {
+        timeLeft--;
+        timerEl.textContent = `Waktu: ${timeLeft} detik`;
+        if (timeLeft <= 0) endGame();
+      }, 1000);
+    }
+
+    function showQuestion() {
+      if (current >= questions.length) {
+        endGame();
+        return;
+      }
+
+      const q = questions[current];
+      questionEl.textContent = q.question;
+      questionImg.src = q.image;
+      questionImg.classList.remove("hidden");
+      optionsEl.innerHTML = "";
+
+      q.options.forEach(opt => {
+        const btn = document.createElement("div");
+        btn.className = "option bg-gray-600 px-4 py-2 rounded cursor-pointer transition hover:bg-teal-400 hover:text-black";
+        btn.textContent = opt;
+        btn.onclick = () => checkAnswer(opt, q.answer);
+        optionsEl.appendChild(btn);
+      });
+    }
+
+    function checkAnswer(selected, correctAnswer) {
+      if (selected === correctAnswer) {
+        score += 100;
+        correct++;
+        scoreEl.textContent = `Skor: ${score}`;
+        try {
+          clapSound.currentTime = 0;
+          clapSound.play();
+        } catch (e) {
+          console.log("Audio tidak dapat diputar:", e);
+        }
+        fireConfetti();
+      }
+      current++;
+      showQuestion();
+    }
+
+    function endGame() {
+      clearInterval(timer);
+      questionEl.textContent = "";
+      optionsEl.innerHTML = "";
+      questionImg.classList.add("hidden");
+      gameOverEl.textContent = `⏰ Waktu habis atau soal selesai! Skor akhir: ${score} (${correct} benar)`;
+      restartBtn.classList.remove("hidden");
+    }
+
+    function restartGame() {
+      startGame();
+    }
+
+    function fireConfetti() {
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
+    }
+
+    window.onload = startGame;
+  </script>
+</body>
+</html>
